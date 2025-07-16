@@ -30,7 +30,7 @@ exports.handleSearch = async (req, res) => {
 
     console.log(txnId); //for using in postman
 
-    const bppUrl = 'http://localhost:3000/bpp/on_search';
+    const bppUrl = `${process.env.SERVER_URL}/bpp/on_search`;
 
     const payload = {
       context: {

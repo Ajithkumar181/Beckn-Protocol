@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { SERVER_URL } from '@env';
 import {
   View,
   Text,
@@ -27,7 +28,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const fetchSimilarProducts = async (categoryName) => {
      try {
          
-      const res = await fetch(SEARCH_URL, {
+      const res = await fetch(`"${SERVER_URL}/bap/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +67,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         items: [{ id: item_id }],
       };
 
-      const res = await fetch(API_URL, {
+      const res = await fetch(`${SERVER_URL}/bap/select`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +126,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const handleAddToCart = async (item) => {
     try {
-      const response = await fetch("http://localhost:5000/cart/add", {
+      const response = await fetch(`${SERVER_URL}/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

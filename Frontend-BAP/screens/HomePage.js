@@ -35,9 +35,6 @@ const HomePage = ({navigation}) => {
     loadInitialCategories();
   }, []);
 
-  useEffect(() => {
-  console.log('SERVER_URL:', SERVER_URL);
-}, []);
 
   const loadInitialCategories = async () => {
     setLoading(true);
@@ -48,6 +45,7 @@ const HomePage = ({navigation}) => {
 
   const fetchCategoryProducts = async (category) => {
     try {
+      console.log('SERVER_URL from log vro:', SERVER_URL);
       const response = await fetch(`${SERVER_URL}/bap/search`, {
         method: 'POST',
         headers: {

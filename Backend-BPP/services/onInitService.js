@@ -146,3 +146,4 @@ async function handleOnInit({ items, transaction_id, customer_location }) {
 }
 
 module.exports = { handleOnInit };
+r
