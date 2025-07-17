@@ -45,6 +45,7 @@ const HomePage = ({navigation}) => {
 
   const fetchCategoryProducts = async (category) => {
     try {
+      console.log(SERVER_URL);
       const response = await fetch(`${SERVER_URL}/bap/search`, {
         method: 'POST',
         headers: {
@@ -95,7 +96,7 @@ const HomePage = ({navigation}) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/bap/search', {
+      const response = await fetch(`${SERVER_URL}/bap/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +133,7 @@ const HomePage = ({navigation}) => {
   // console.log("categriy if",categoryID);
  
     try {
-      const response = await fetch('http://localhost:5000/bap/search', {
+      const response = await fetch(`${SERVER_URL}/bap/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

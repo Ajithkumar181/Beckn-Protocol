@@ -28,7 +28,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const fetchSimilarProducts = async (categoryName) => {
      try {
          
-      const res = await fetch(`"${SERVER_URL}/bap/search`, {
+      const res = await fetch(`${SERVER_URL}/bap/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +78,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
       const payload = {
         items: [{ id: item_id }],
       };
-
 
       const res = await fetch(`${SERVER_URL}/bap/select`, {
         method: "POST",

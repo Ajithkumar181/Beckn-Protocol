@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SERVER_URL } from '@env';
 import {
   View,
   Text,
@@ -17,7 +18,7 @@ export default function ProviderItemsScreen({ navigation, route }) {
   
   const updateCartQuantity = async (item, newQty) => {
   try {
-    const response = await fetch("http://192.168.199.249:5000/cart/update", {
+    const response = await fetch(`${SERVER_URL}/cart/update`, {
       method: "PUT", // ✅ Use PUT
       headers: {
         "Content-Type": "application/json",
