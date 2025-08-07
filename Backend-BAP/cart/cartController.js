@@ -13,12 +13,11 @@ exports.addToCart = async (req, res) => {
       fulfillment_id,
       item_name,
       quantity,
-      category,
       unit_price,
       image_url,
+      category, // ✅ NEW
     } = req.body;
 
-    // ✅ Validate required fields
     const requiredFields = [
       user_id,
       bpp_id,
@@ -34,17 +33,16 @@ exports.addToCart = async (req, res) => {
         .json({ error: 'Missing required fields in request body' });
     }
 
-    // ✅ SQL INSERT with ON CONFLICT
     const insertQuery = `
       INSERT INTO user_cart (
         id, user_id, bpp_id, bpp_product_id, provider_id, provider_name,
         provider_address, fulfillment_id, item_name,
-        quantity, unit_price, image_url,category,added_at
+        quantity, unit_price, image_url, category, added_at
       )
       VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9,
-        $10, $11, $12,$13,$14
+        $10, $11, $12, $13, CURRENT_TIMESTAMP
       )
       ON CONFLICT (user_id, bpp_product_id, provider_id)
       DO UPDATE SET
@@ -55,6 +53,7 @@ exports.addToCart = async (req, res) => {
         fulfillment_id = EXCLUDED.fulfillment_id,
         item_name = EXCLUDED.item_name,
         image_url = EXCLUDED.image_url,
+        category = EXCLUDED.category,
         added_at = CURRENT_TIMESTAMP
     `;
 
@@ -72,7 +71,6 @@ exports.addToCart = async (req, res) => {
       unit_price,
       image_url,
       category,
-      new Date().toISOString(),
     ];
 
     await db.query(insertQuery, values);
@@ -84,12 +82,12 @@ exports.addToCart = async (req, res) => {
   }
 };
 
+
+
 exports.updateCartItem = async (req, res) => {
   try {
-    console.log('Update');
     const { user_id, bpp_product_id, provider_id, quantity } = req.body;
 
-    // Basic validation
     if (!user_id || !bpp_product_id || !provider_id) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -108,12 +106,7 @@ exports.updateCartItem = async (req, res) => {
       WHERE user_id = $2 AND bpp_product_id = $3 AND provider_id = $4
     `;
 
-    const result = await db.query(updateQuery, [
-      quantity,
-      user_id,
-      bpp_product_id,
-      provider_id,
-    ]);
+    const result = await db.query(updateQuery, [quantity, user_id, bpp_product_id, provider_id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Item not found in cart' });
@@ -145,7 +138,8 @@ exports.viewCart = async (req, res) => {
         item_name,
         quantity,
         unit_price,
-         image_url,
+        image_url,
+        category,
         (quantity * unit_price) AS total_price
       FROM user_cart
       WHERE user_id = $1
@@ -154,7 +148,6 @@ exports.viewCart = async (req, res) => {
 
     const { rows } = await db.query(query, [user_id]);
 
-    // Group cart items by provider_id
     const groupedCart = {};
     for (const row of rows) {
       const {
@@ -168,7 +161,8 @@ exports.viewCart = async (req, res) => {
         quantity,
         unit_price,
         total_price,
-        image_url, // ✅ Include this field
+        image_url,
+        category,
       } = row;
 
       if (!groupedCart[provider_id]) {
@@ -176,7 +170,7 @@ exports.viewCart = async (req, res) => {
           provider_id,
           provider_name,
           provider_address,
-          items: [],
+          items: []
         };
       }
 
@@ -188,14 +182,16 @@ exports.viewCart = async (req, res) => {
         quantity,
         unit_price: parseFloat(unit_price),
         total_price: parseFloat(total_price),
-        image_url, // ✅ Include this field
+        image_url,
+        category,
       });
     }
 
     res.status(200).json({
       user_id,
-      cart: Object.values(groupedCart),
+      cart: Object.values(groupedCart)
     });
+
   } catch (error) {
     console.error('View Cart Error:', error.message);
     res.status(500).json({ error: 'Failed to fetch cart' });
@@ -205,13 +201,12 @@ exports.viewCart = async (req, res) => {
 exports.clearCart = async (req, res) => {
   try {
     const { user_id, provider_id } = req.body;
-    console.log('Clear Cart:', user_id, provider_id);
+
     if (!user_id) {
       return res.status(400).json({ error: 'user_id is required' });
     }
 
     if (provider_id) {
-      // Clear only the provider's items
       await db.query(
         `DELETE FROM user_cart WHERE user_id = $1 AND provider_id = $2`,
         [user_id, provider_id]
@@ -221,8 +216,6 @@ exports.clearCart = async (req, res) => {
       });
     }
 
-    // Clear all items for the user'
-    console.log(user_id);
     await db.query(`DELETE FROM user_cart WHERE user_id = $1`, [user_id]);
 
     res.status(200).json({ message: '🧹 Entire cart cleared successfully' });
@@ -234,38 +227,34 @@ exports.clearCart = async (req, res) => {
 
 exports.getTopCategories = async (req, res) => {
   try {
-    // const { user_id } = req.params;
-    const { user_id } = req.body;
+    const { user_id } = req.params;
 
     if (!user_id) {
       return res.status(400).json({ error: 'user_id is required in params' });
     }
 
     const query = `
-  SELECT category
-  FROM user_cart
-  WHERE user_id = $1
-  GROUP BY category
-  ORDER BY COUNT(*) DESC
-  LIMIT 3
-`;
+      SELECT category
+      FROM user_cart
+      WHERE user_id = $1
+      GROUP BY category
+      ORDER BY COUNT(*) DESC
+      LIMIT 3
+    `;
 
     const { rows } = await db.query(query, [user_id]);
 
     const topCategories = rows.map((row) => row.category);
 
-    const fixedtopCategories = [`fertilizer`, `fungicide`, `growth_promoter`];
-    if (topCategories.length < 3) {
-      for (const category of fixedtopCategories) {
-        if (!topCategories.includes(category)) {
-          topCategories.push(category);
-        }
-        if (topCategories.length >= 3) break;
+    const fixedTopCategories = [`fertilizer`, `fungicide`, `growth_promoter`];
+    for (const category of fixedTopCategories) {
+      if (!topCategories.includes(category)) {
+        topCategories.push(category);
       }
+      if (topCategories.length >= 3) break;
     }
-    res.status(200).json({
-      top_categories: topCategories,
-    });
+
+    res.status(200).json({ top_categories: topCategories });
   } catch (error) {
     console.error('Error fetching top categories:', error);
     res.status(500).json({ error: 'Failed to Fetch Top Categories' });
