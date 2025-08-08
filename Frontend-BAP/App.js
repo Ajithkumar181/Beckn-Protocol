@@ -13,7 +13,7 @@ const Stack = createNativeStackNavigator();
 const CartStack = createNativeStackNavigator();
 import ProcurementDetails from './screens/ProcurementDetails';
 import CompletedProcurementDetails from './screens/CompletedProcurementDetails';
-
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import ProcurementsScreen from './screens/ProcurementsScreen';
 import CreateProcurementScreen from './screens/CreateProcurementScreen';
 const WelcomeScreen = ({ navigation }) => {
@@ -53,6 +53,65 @@ function CartStackScreen() {
   );
 }
 
+const toastConfig = {
+  success: (props) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: 'transparent',
+        backgroundColor: '#f0f9f0',
+      }}
+      text1Style={{ fontSize: 15, fontWeight: '600' }}
+      text2Style={{ fontSize: 13 }}
+      renderLeadingIcon={() => (
+        // <Text
+        //   style={{ fontSize: 20, marginRight: 10 }}
+        //   className='justify-center items-center'
+        // >
+        //   ✅
+        // </Text>
+        // <Text style={{ fontSize: 20, marginRight: 10 }}></Text>
+        <View
+          style={{
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 10,
+            marginLeft: 10,
+          }}
+        >
+          <Text style={{ fontSize: 30 }}>✅</Text>
+        </View>
+      )}
+    />
+  ),
+
+  error: (props) => (
+    <ErrorToast
+      {...props}
+      style={{
+        borderLeftColor: 'transparent',
+        backgroundColor: '#fdf2f2',
+      }}
+      text1Style={{ fontSize: 15, fontWeight: '600', color: '#b91c1c' }}
+      text2Style={{ fontSize: 13, color: '#dc2626' }}
+      renderLeadingIcon={() => (
+        // <Text style={{ fontSize: 20, marginRight: 10 }}></Text>
+        <View
+          style={{
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 10,
+            marginLeft: 10,
+          }}
+        >
+          <Text style={{ fontSize: 30 }}>❌</Text>
+        </View>
+      )}
+    />
+  ),
+};
 export default function App() {
   return (
     <NavigationContainer>
@@ -99,6 +158,8 @@ export default function App() {
           options={{ headerShown: false }} // hides nested headers
         />
       </Stack.Navigator>
+
+      <Toast style={{ zIndex: 1000 }} config={toastConfig} />
     </NavigationContainer>
   );
 }

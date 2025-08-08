@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import tw from 'tailwind-react-native-classnames';
 import SimilarProducts from '../components/SimilarProducts'; // adjust if path is different
-
+import Toast from 'react-native-toast-message';
 
 export default function ProductDetailsScreen({ route, navigation }) {
  
@@ -21,7 +21,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [relatedItems, setRelatedItems] = useState([]);
    const [selectedBatchIndex, setSelectedBatchIndex] = useState(null);
   const [selectedPrice, setSelectedPrice] = useState(null);
-
 
   // ✅ Use your backend BAP IP here
   const API_URL = "http://localhost:5000/bap/select";
@@ -82,7 +81,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
 
       const res = await fetch(API_URL, {
-        method: "POST",
+        method: 'POST',
         headers: {
           "Content-Type": "application/json",
         },
@@ -131,6 +130,24 @@ export default function ProductDetailsScreen({ route, navigation }) {
       </View>
     );
   }
+
+  const showAddToast = () => {
+    Toast.show({
+      type: 'success', // Options: 'success' | 'error' | 'info'
+      // text1: 'Success',
+      text1: 'Item added to cart',
+      position: 'top',
+      visibilityTime: 3000,
+    });
+  };
+  const showAddErrorToast = () => {
+    Toast.show({
+      type: 'error', // Options: 'success' | 'error' | 'info'
+      text1: 'Failed to add item to cart',
+      position: 'top',
+      visibilityTime: 3000,
+    });
+  };
 
   const provider = productData.providers[0];
   const item = provider.items[0];
