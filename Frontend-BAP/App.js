@@ -14,6 +14,8 @@ const CartStack = createNativeStackNavigator();
 import ProcurementDetails from './screens/ProcurementDetails';
 import CompletedProcurementDetails from './screens/CompletedProcurementDetails';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import VerifyProductsScreen from './screens/VerifyProductsScreen';
+
 import ProcurementsScreen from './screens/ProcurementsScreen';
 import CreateProcurementScreen from './screens/CreateProcurementScreen';
 const WelcomeScreen = ({ navigation }) => {
@@ -64,13 +66,6 @@ const toastConfig = {
       text1Style={{ fontSize: 15, fontWeight: '600' }}
       text2Style={{ fontSize: 13 }}
       renderLeadingIcon={() => (
-        // <Text
-        //   style={{ fontSize: 20, marginRight: 10 }}
-        //   className='justify-center items-center'
-        // >
-        //   ✅
-        // </Text>
-        // <Text style={{ fontSize: 20, marginRight: 10 }}></Text>
         <View
           style={{
             height: '100%',
@@ -157,6 +152,11 @@ export default function App() {
           component={CreateProcurementScreen}
           options={{ headerShown: false }} // hides nested headers
         />
+          <Stack.Screen
+    name='VerifyProductsScreen'
+    component={VerifyProductsScreen}
+    options={{ title: 'Verify Products' }}
+  />
       </Stack.Navigator>
 
       <Toast style={{ zIndex: 1000 }} config={toastConfig} />
