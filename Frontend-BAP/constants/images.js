@@ -11,6 +11,8 @@ import find from '../assets/find.png';
 import crop from '../assets/cropimage.webp';
 import vehicle from '../assets/tractorwithtrailer.jpg';
 import recpt from '../assets/recpt.png';
+import cart from '../assets/cart.png';
+
 export const images = {
   fertilizer,
   fungicide,
@@ -25,4 +27,5 @@ export const images = {
   vehicle,
   crop,
   recpt,
+  cart,
 };
