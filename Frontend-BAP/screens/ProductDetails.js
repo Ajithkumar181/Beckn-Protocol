@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 
 export default function ProductDetailsScreen({ route, navigation }) {
   const { item_id } = route.params;
+  // console.log(item_id);
   const [productData, setProductData] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -69,12 +70,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
         };
       });
 
-      console.log('✅ Enriched Similar Products:', enrichedItems);
-      setRelatedItems(enrichedItems);
-    } catch (error) {
-      console.error('❌ Error fetching similar products:', error);
-    }
-  };
+    // console.log("✅ Enriched Similar Products:", enrichedItems);
+    setRelatedItems(enrichedItems);
+  } catch (error) {
+    console.error("❌ Error fetching similar products:", error);
+  }
+};
 
   const fetchProductDetails = async () => {
     try {
@@ -154,7 +155,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const provider = productData.providers[0];
   const item = provider.items[0];
-  // console.log("items",item.category_id);
+  
+  console.log("items select",item.batches);
   const fulfillment = productData.fulfillments.find(
     (f) => f.id === item.fulfillment_id
   );
@@ -199,168 +201,210 @@ export default function ProductDetailsScreen({ route, navigation }) {
     setSelectedPrice(priceValue);
   };
 
-  return (
-    <ScrollView style={tw`p-4 bg-green-50`}>
-      {/* Image Section */}
-      <View style={tw`items-center mb-5`}>
-        <Image
-          source={{
-            uri: item?.descriptor?.image || 'https://via.placeholder.com/150',
-          }}
-          style={[
-            tw`w-36 h-48 rounded-2xl shadow-md`,
-            { resizeMode: 'contain' },
-          ]}
-        />
-      </View>
+ return (
+  <ScrollView style={tw`p-4 bg-green-50`} showsVerticalScrollIndicator={false}>
+    <View
+  style={[
+    tw`mb-8 rounded-2xl p-4 bg-green-50`,
+    {
+      shadowColor: '#3a6a35',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 5,
+      position: 'relative', // enable absolute positioning of children
+      alignItems: 'center',
+    },
+  ]}
+  accessible={true}
+  accessibilityLabel={`Product image of ${item?.descriptor?.name || 'product'}`}
+>
+  {/* Organic Tag */}
+  {item?.tags?.some(tag => tag.code === 'organic' && tag.value === 'true') && (
+    <View
+      style={[
+        tw`absolute top-3 right-3 px-3 py-1 rounded-full bg-green-600`,
+        { shadowColor: '#155724', shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
+      ]}
+      accessible={true}
+      accessibilityLabel="Organic product"
+    >
+      <Text style={tw`text-white text-xs font-semibold`}>Organic</Text>
+    </View>
+  )}
 
-      {/* Provider & Item Info */}
-      <Text style={tw`text-xs text-green-600`}>
-        Fulfilled by: {provider?.descriptor?.name}
+  <Image
+    source={{ uri: item?.descriptor?.image || 'https://via.placeholder.com/150' }}
+    style={[tw`w-40 h-56 rounded-2xl`, { resizeMode: 'contain' }]}
+  />
+</View>
+
+
+
+    {/* Provider & Product Name */}
+    <Text style={tw`text-xs text-green-600 mb-1`}>
+      Fulfilled by: {provider?.descriptor?.name || 'Unknown Provider'}
+    </Text>
+    <Text style={tw`text-2xl font-bold text-gray-800`}>
+      {item?.descriptor?.name || 'Unnamed Product'}
+    </Text>
+
+    {/* Price & Stock */}
+    <View style={tw`mt-3 p-3 bg-green-100 rounded-lg shadow-sm`}>
+  <Text style={tw`text-green-700 text-xl font-extrabold`}>
+    ₹{item?.batches?.[0]?.price?.value ?? 'N/A'} 
+    {` ${item?.batches?.[0]?.price?.currency || 'INR'} / ${item?.quantity?.unitized?.measure?.unit || 'unit'}`}
+  </Text>
+  <Text style={tw`text-sm text-gray-600 mt-1`}>
+    Available: {item?.quantity?.available?.count ?? 0} {item?.quantity?.unitized?.measure?.unit || ''}
+  </Text>
+</View>
+
+    {/* Quantity Selector */}
+    <View style={tw`flex-row items-center mt-5`}>
+      <Text style={tw`text-base font-semibold mr-4`}>Quantity</Text>
+      <TouchableOpacity
+        onPress={() => setQuantity(Math.max(1, quantity - 1))}
+        style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Decrease quantity"
+      >
+        <Text style={tw`text-xl font-bold text-green-800`}>−</Text>
+      </TouchableOpacity>
+      <Text style={tw`mx-4 text-lg font-semibold text-gray-800`}>{quantity}</Text>
+      <TouchableOpacity
+        onPress={() => setQuantity(quantity + 1)}
+        style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Increase quantity"
+      >
+        <Text style={tw`text-xl font-bold text-green-800`}>+</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Product Overview */}
+    <View style={tw`mt-6`}>
+      <Text style={tw`text-lg font-semibold mb-2 text-gray-800`}>Product Overview</Text>
+      <Text style={tw`text-sm text-gray-700 leading-relaxed`}>
+        {item?.descriptor?.description || 'No description available.'}
       </Text>
-      <Text style={tw`text-2xl font-bold text-gray-800 mt-1`}>
-        {item?.descriptor?.name}
-      </Text>
+    </View>
 
-      {/* Price & Stock */}
-      <View style={tw`mt-3 p-3 bg-green-100 rounded-lg shadow-sm`}>
-        <Text style={tw`text-green-700 text-xl font-extrabold`}>
-          ₹{item?.batches?.[0]?.price?.value || 'N/A'}{' '}
-          {item?.batches?.[0]?.price?.currency || 'INR'} /{' '}
-          {item?.quantity?.unitized?.measure?.unit || 'unit'}
-        </Text>
-        <Text style={tw`text-sm text-gray-600 mt-1`}>
-          Available: {item?.quantity?.available?.count ?? 0}{' '}
-          {item?.quantity?.unitized?.measure?.unit || ''}
-        </Text>
-      </View>
-
-      {/* Quantity Selector */}
-      <View style={tw`flex-row items-center mt-5`}>
-        <Text style={tw`text-base font-semibold mr-4`}>Quantity</Text>
-        <TouchableOpacity
-          onPress={() => setQuantity(Math.max(1, quantity - 1))}
-          style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
-          activeOpacity={0.7}
-        >
-          <Text style={tw`text-xl font-bold text-green-800`}>−</Text>
-        </TouchableOpacity>
-        <Text style={tw`mx-4 text-lg font-semibold text-gray-800`}>
-          {quantity}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setQuantity(quantity + 1)}
-          style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
-          activeOpacity={0.7}
-        >
-          <Text style={tw`text-xl font-bold text-green-800`}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Description */}
-      <View style={tw`mt-6`}>
-        <Text style={tw`text-lg font-semibold mb-2 text-gray-800`}>
-          Product Overview
-        </Text>
-        <Text style={tw`text-sm text-gray-700 leading-relaxed`}>
-          {item?.descriptor?.description || 'No description available.'}
-        </Text>
-      </View>
-
-      {/* Tags */}
-      {item?.tags?.length > 0 && (
-        <View style={tw`mt-4`}>
-          <Text style={tw`text-base font-semibold text-gray-800 mb-1`}>
-            Tags:
-          </Text>
+    {/* Tags */}
+    {item?.tags?.length > 0 && (
+      <View style={tw`mt-4`}>
+        <Text style={tw`text-base font-semibold text-gray-800 mb-1`}>Tags:</Text>
+        <View style={tw`flex-row flex-wrap`}>
           {item.tags.map((tag, idx) => (
-            <Text key={idx} style={tw`text-sm text-gray-600`}>
-              {tag.code}: {tag.value}
-            </Text>
+            <View
+              key={idx}
+              style={tw`mr-2 mb-2 px-3 py-1 bg-green-100 rounded-full`}
+              accessible
+              accessibilityLabel={`Tag: ${tag.value}`}
+            >
+              <Text style={tw`text-sm text-green-800`}>{tag.value}</Text>
+            </View>
           ))}
         </View>
-      )}
+      </View>
+    )}
 
-      {/* Batches Info */}
-      {item?.batches?.length > 0 && (
-        <View style={tw`mt-6`}>
-          <Text style={tw`text-base font-semibold text-gray-800 mb-2`}>
-            Available Batches:
+ {/* Available Batches */}
+{item?.batches?.length > 0 && (
+  <View style={tw`mt-6`}>
+    <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
+      Available Batches
+    </Text>
+
+    {item.batches.map((batch, index) => {
+      const isSelected = selectedBatchIndex === index;
+
+      const batchQuantity = batch?.quantity?.available?.count ?? 0;
+      const batchUnit = batch?.quantity?.unitized?.measure?.unit || '';
+
+      return (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleBatchSelect(index)}
+          style={tw.style(
+            'p-4 rounded-2xl mb-4 shadow-sm border',
+            isSelected
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 bg-white'
+          )}
+        >
+          {/* Price */}
+          <Text style={tw`text-lg font-bold text-green-700 mb-1`}>
+            ₹{batch.price?.value ?? 'N/A'}
           </Text>
 
-          {item.batches.map((batch, index) => {
-            const isSelected = selectedBatchIndex === index;
-
-            return (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleBatchSelect(index)}
-                style={tw.style(
-                  'p-3 rounded-lg mb-2 shadow-sm border',
-                  isSelected
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 bg-white'
-                )}
-              >
-                <Text style={tw`text-green-800 font-semibold`}>
-                  ₹{batch.price?.value || 'N/A'}
-                </Text>
-                <Text style={tw`text-gray-600 text-sm`}>
-                  Expiry:{' '}
-                  {batch.expiry_date
-                    ? new Date(batch.expiry_date).toLocaleDateString()
-                    : 'N/A'}
-                </Text>
-                {isSelected && (
-                  <Text style={tw`text-blue-600 mt-1`}>✔ Selected</Text>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Fulfillment Info */}
-      {fulfillment && (
-        <View style={tw`mt-5`}>
-          <Text style={tw`text-base font-semibold text-gray-800`}>
-            Pickup Location
+          {/* Quantity */}
+          <Text style={tw`text-sm text-gray-600`}>
+            Quantity: {batchQuantity} {batchUnit}
           </Text>
-          <Text style={tw`text-sm text-gray-700`}>
-            {fulfillment?.location?.address}
-          </Text>
-          <Text style={tw`text-xs text-gray-500`}>
-            GPS: {fulfillment?.location?.gps}
-          </Text>
-        </View>
-      )}
 
-      {/* Add to Cart Button */}
-      <TouchableOpacity
-        style={tw`bg-green-600 py-4 rounded-2xl mt-8 items-center shadow-md`}
-        onPress={() =>
-          handleAddToCart({
-            user_id: 'a985baac-9028-4dc1-bbd9-a6f3aae49ef5', // Replace dynamically
-            bpp_id: productData?.bpp_id || 'agri.bpp',
-            bpp_product_id: item?.id,
-            provider_id: provider?.id,
-            provider_name: provider?.descriptor?.name,
-            provider_address: fulfillment?.location?.address || '',
-            fulfillment_id: fulfillment?.id || '',
-            item_name: item?.descriptor?.name,
-            quantity: quantity,
-            unit_price: selectedPrice || 0,
-            image_url: item?.descriptor?.image || '',
-            category: item?.category_id,
-          })
-        }
-        activeOpacity={0.85}
-      >
-        <Text style={tw`text-white text-base font-bold`}>🛒 Add to Cart</Text>
-      </TouchableOpacity>
+          {/* Expiry */}
+          <Text style={tw`text-sm text-gray-500`}>
+            Expiry: {batch.expiry_date
+              ? new Date(batch.expiry_date).toLocaleDateString()
+              : 'N/A'}
+          </Text>
 
-      {/* SIMILAR PRODUCTS */}
-      <SimilarProducts relatedItems={relatedItems} navigation={navigation} />
-    </ScrollView>
-  );
+          {/* Selected Indicator */}
+          {isSelected && (
+            <Text style={tw`text-blue-600 font-medium mt-2`}>
+              ✔ Selected
+            </Text>
+          )}
+        </TouchableOpacity>
+      );
+    })}
+  </View>
+)}
+
+
+
+    {/* Pickup Location */}
+    {fulfillment && (
+      <View style={tw`mt-5`}>
+        <Text style={tw`text-base font-semibold text-gray-800`}>Pickup Location</Text>
+        <Text style={tw`text-sm text-gray-700`}>{fulfillment?.location?.address}</Text>
+        <Text style={tw`text-xs text-gray-500`}>GPS: {fulfillment?.location?.gps}</Text>
+      </View>
+    )}
+
+    {/* Add to Cart Button */}
+    <TouchableOpacity
+      style={tw`bg-green-600 py-4 rounded-2xl mt-8 items-center shadow-md`}
+      onPress={() =>
+        handleAddToCart({
+          user_id: "a985baac-9028-4dc1-bbd9-a6f3aae49ef5", // Replace dynamically
+          bpp_id: productData?.bpp_id || "agri.bpp",
+          bpp_product_id: item?.id,
+          provider_id: provider?.id,
+          provider_name: provider?.descriptor?.name,
+          provider_address: fulfillment?.location?.address || "",
+          fulfillment_id: fulfillment?.id || "",
+          item_name: item?.descriptor?.name,
+          quantity: quantity,
+          unit_price: selectedPrice || 0,
+          image_url: item?.descriptor?.image || "",
+          category: item?.category_id,
+        })
+      }
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel="Add to cart"
+    >
+      <Text style={tw`text-white text-base font-bold`}>🛒 Add to Cart</Text>
+    </TouchableOpacity>
+
+    {/* Similar Products */}
+    <SimilarProducts relatedItems={relatedItems} navigation={navigation} />
+  </ScrollView>
+);
+
+
 }
