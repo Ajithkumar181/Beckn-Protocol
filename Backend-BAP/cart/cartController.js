@@ -16,6 +16,7 @@ exports.addToCart = async (req, res) => {
       unit_price,
       image_url,
       category, // ✅ NEW
+      batch_id,
     } = req.body;
 
     const requiredFields = [
@@ -37,14 +38,13 @@ exports.addToCart = async (req, res) => {
       INSERT INTO user_cart (
         id, user_id, bpp_id, bpp_product_id, provider_id, provider_name,
         provider_address, fulfillment_id, item_name,
-        quantity, unit_price, image_url, category, added_at
-      )
+        quantity, unit_price, image_url, category,batch_id,added_at)
       VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9,
-        $10, $11, $12, $13, CURRENT_TIMESTAMP
+        $10, $11, $12,$13,$14,CURRENT_TIMESTAMP
       )
-      ON CONFLICT (user_id, bpp_product_id, provider_id)
+      ON CONFLICT (bpp_product_id, batch_id)
       DO UPDATE SET
         quantity = EXCLUDED.quantity,
         unit_price = EXCLUDED.unit_price,
@@ -71,6 +71,7 @@ exports.addToCart = async (req, res) => {
       unit_price,
       image_url,
       category,
+      batch_id,
     ];
 
     await db.query(insertQuery, values);
@@ -81,8 +82,6 @@ exports.addToCart = async (req, res) => {
     res.status(500).json({ error: 'Failed to add or update item in cart' });
   }
 };
-
-
 
 exports.updateCartItem = async (req, res) => {
   try {
@@ -106,7 +105,12 @@ exports.updateCartItem = async (req, res) => {
       WHERE user_id = $2 AND bpp_product_id = $3 AND provider_id = $4
     `;
 
-    const result = await db.query(updateQuery, [quantity, user_id, bpp_product_id, provider_id]);
+    const result = await db.query(updateQuery, [
+      quantity,
+      user_id,
+      bpp_product_id,
+      provider_id,
+    ]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Item not found in cart' });
@@ -170,7 +174,7 @@ exports.viewCart = async (req, res) => {
           provider_id,
           provider_name,
           provider_address,
-          items: []
+          items: [],
         };
       }
 
@@ -189,9 +193,8 @@ exports.viewCart = async (req, res) => {
 
     res.status(200).json({
       user_id,
-      cart: Object.values(groupedCart)
+      cart: Object.values(groupedCart),
     });
-
   } catch (error) {
     console.error('View Cart Error:', error.message);
     res.status(500).json({ error: 'Failed to fetch cart' });

@@ -24,14 +24,15 @@ Content-Type: application/json
   "quantity": 5,
   "unit_price": 120.0,
   "category": "micro_nutrient",
-  "image_url": null
+  "image_url": null,
+  "batch_id": "bd8f6aef-d5ee-4eb1-8901-3bdeac7e734a"
 }
 ### delete Item from Cart
 DELETE http://localhost:5000/cart/clear
 Content-Type:application/json
 
 {
-  "user_id": "6696ef79-85e0-4a26-b16d-fc187ae4c629"
+  "user_id": "a985baac-9028-4dc1-bbd9-a6f3aae49ef5"
 }
 
 ### Update Item in Cart

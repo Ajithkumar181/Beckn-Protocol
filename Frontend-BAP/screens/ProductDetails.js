@@ -19,8 +19,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [relatedItems, setRelatedItems] = useState([]);
-  const [selectedBatchIndex, setSelectedBatchIndex] = useState(null);
-  const [selectedPrice, setSelectedPrice] = useState(null);
+  // const [selectedBatchIndex, setSelectedBatchIndex] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState([]);
+
+  // const [selectedPrice, setSelectedPrice] = useState(null);
 
   // ✅ Use your backend BAP IP here
   const API_URL = 'http://localhost:5000/bap/select';
@@ -45,7 +47,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
       const catalog = json.catalog?.message?.catalog || {};
       const items = catalog.items || [];
-      console.log('items', items);
       const providers = catalog.providers || [];
       const fulfillments = catalog.fulfillments || [];
 
@@ -70,12 +71,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
         };
       });
 
-    // console.log("✅ Enriched Similar Products:", enrichedItems);
-    setRelatedItems(enrichedItems);
-  } catch (error) {
-    console.error("❌ Error fetching similar products:", error);
-  }
-};
+      // console.log("✅ Enriched Similar Products:", enrichedItems);
+      setRelatedItems(enrichedItems);
+    } catch (error) {
+      console.error('❌ Error fetching similar products:', error);
+    }
+  };
 
   const fetchProductDetails = async () => {
     try {
@@ -92,7 +93,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
       });
 
       const json = await res.json();
-      //  console.log(json);
+      console.log(json);
       // ✅ Safe access to nested response
       if (json?.bpp_response?.message?.catalog) {
         setProductData(json.bpp_response.message.catalog);
@@ -114,6 +115,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   useEffect(() => {
     setQuantity(1);
     fetchProductDetails();
+    setSelectedBatch([]); // Reset selected batches on new product load
   }, [item_id]); // 🔁 refetch when item_id changes
 
   if (loading) {
@@ -155,256 +157,337 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const provider = productData.providers[0];
   const item = provider.items[0];
-  
-  console.log("items select",item.batches);
+
   const fulfillment = productData.fulfillments.find(
     (f) => f.id === item.fulfillment_id
   );
+  // Ajith's
+  // const handleAddToCart = async (item) => {
+  //   try {
+  //     if (item.unit_price == 0) {
+  //       console.log(
+  //         'Missing Price',
+  //         'This item has no price. Please select a batch or try another product.'
+  //       );
+  //       showAddErrorToast();
+  //       return;
+  //     }
 
-  const handleAddToCart = async (item) => {
+  //     console.log(JSON.stringify(item));
+  //     const response = await fetch('http://localhost:5000/cart/add', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(item),
+  //     });
+
+  //     const data = await response.json();
+  //     console.log('cart', item);
+  //     if (response.ok) {
+  //       console.log('cart', item);
+  //       console.log('✅ Cart added successfully:', data);
+  //       showAddToast();
+  //     } else {
+  //       console.error('❌ Failed to add to cart:', data.message || data);
+  //     }
+  //   } catch (error) {
+  //     console.error('⚠️ Error in API call:', error);
+  //   }
+  // };
+
+  // Shriram's
+
+  const handleAddToCart = async (items) => {
     try {
-      if (item.unit_price == 0) {
-        console.log(
-          'Missing Price',
-          'This item has no price. Please select a batch or try another product.'
-        );
+      if (items.length === 0) {
+        console.log('No items to add');
         showAddErrorToast();
         return;
       }
-      const response = await fetch('http://localhost:5000/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(item),
-      });
 
-      const data = await response.json();
-      console.log('cart', item);
-      if (response.ok) {
-        console.log('cart', item);
-        console.log('✅ Cart added successfully:', data);
-        showAddToast();
-      } else {
-        console.error('❌ Failed to add to cart:', data.message || data);
+      for (const item of items) {
+        console.log(item);
+        if (item.unit_price === 0) {
+          console.log('Missing Price', 'Skipping this batch.');
+          continue;
+        }
+
+        const response = await fetch('http://localhost:5000/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          console.log('✅ Added:', item.batch_id, data);
+          showAddToast();
+        } else {
+          console.error('❌ Failed:', item.batch_id, data.message || data);
+        }
       }
     } catch (error) {
-      console.error('⚠️ Error in API call:', error);
+      console.error('⚠️ API Error:', error);
     }
   };
 
-  const handleBatchSelect = (index) => {
-    setSelectedBatchIndex(index);
+  const handleBatchSelect = (batch) => {
+    console.log('Selected batch:', batch);
+    const isSelected = selectedBatch.some((b) => b.id === batch.id);
 
-    const priceValue = parseFloat(item?.batches?.[index]?.price?.value || 0);
-    // console.log("price value",priceValue);
-    setSelectedPrice(priceValue);
+    if (!isSelected) {
+      setSelectedBatch((prev) => [...prev, batch]);
+    } else {
+      setSelectedBatch((prev) => prev.filter((i) => i.id !== batch.id));
+    }
   };
 
- return (
-  <ScrollView style={tw`p-4 bg-green-50`} showsVerticalScrollIndicator={false}>
-    <View
-  style={[
-    tw`mb-8 rounded-2xl p-4 bg-green-50`,
-    {
-      shadowColor: '#3a6a35',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 5,
-      position: 'relative', // enable absolute positioning of children
-      alignItems: 'center',
-    },
-  ]}
-  accessible={true}
-  accessibilityLabel={`Product image of ${item?.descriptor?.name || 'product'}`}
->
-  {/* Organic Tag */}
-  {item?.tags?.some(tag => tag.code === 'organic' && tag.value === 'true') && (
-    <View
-      style={[
-        tw`absolute top-3 right-3 px-3 py-1 rounded-full bg-green-600`,
-        { shadowColor: '#155724', shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 },
-      ]}
-      accessible={true}
-      accessibilityLabel="Organic product"
+  return (
+    <ScrollView
+      style={tw`p-4 bg-green-50`}
+      showsVerticalScrollIndicator={false}
     >
-      <Text style={tw`text-white text-xs font-semibold`}>Organic</Text>
-    </View>
-  )}
-
-  <Image
-    source={{ uri: item?.descriptor?.image || 'https://via.placeholder.com/150' }}
-    style={[tw`w-40 h-56 rounded-2xl`, { resizeMode: 'contain' }]}
-  />
-</View>
-
-
-
-    {/* Provider & Product Name */}
-    <Text style={tw`text-xs text-green-600 mb-1`}>
-      Fulfilled by: {provider?.descriptor?.name || 'Unknown Provider'}
-    </Text>
-    <Text style={tw`text-2xl font-bold text-gray-800`}>
-      {item?.descriptor?.name || 'Unnamed Product'}
-    </Text>
-
-    {/* Price & Stock */}
-    <View style={tw`mt-3 p-3 bg-green-100 rounded-lg shadow-sm`}>
-  <Text style={tw`text-green-700 text-xl font-extrabold`}>
-    ₹{item?.batches?.[0]?.price?.value ?? 'N/A'} 
-    {` ${item?.batches?.[0]?.price?.currency || 'INR'} / ${item?.quantity?.unitized?.measure?.unit || 'unit'}`}
-  </Text>
-  <Text style={tw`text-sm text-gray-600 mt-1`}>
-    Available: {item?.quantity?.available?.count ?? 0} {item?.quantity?.unitized?.measure?.unit || ''}
-  </Text>
-</View>
-
-    {/* Quantity Selector */}
-    <View style={tw`flex-row items-center mt-5`}>
-      <Text style={tw`text-base font-semibold mr-4`}>Quantity</Text>
-      <TouchableOpacity
-        onPress={() => setQuantity(Math.max(1, quantity - 1))}
-        style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Decrease quantity"
+      <View
+        style={[
+          tw`mb-8 rounded-2xl p-4 bg-green-50`,
+          {
+            shadowColor: '#3a6a35',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            elevation: 5,
+            position: 'relative', // enable absolute positioning of children
+            alignItems: 'center',
+          },
+        ]}
+        accessible={true}
+        accessibilityLabel={`Product image of ${
+          item?.descriptor?.name || 'product'
+        }`}
       >
-        <Text style={tw`text-xl font-bold text-green-800`}>−</Text>
-      </TouchableOpacity>
-      <Text style={tw`mx-4 text-lg font-semibold text-gray-800`}>{quantity}</Text>
-      <TouchableOpacity
-        onPress={() => setQuantity(quantity + 1)}
-        style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Increase quantity"
-      >
-        <Text style={tw`text-xl font-bold text-green-800`}>+</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Organic Tag */}
+        {item?.tags?.some(
+          (tag) => tag.code === 'organic' && tag.value === 'true'
+        ) && (
+          <View
+            style={[
+              tw`absolute top-3 right-3 px-3 py-1 rounded-full bg-green-600`,
+              {
+                shadowColor: '#155724',
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 3,
+              },
+            ]}
+            accessible={true}
+            accessibilityLabel='Organic product'
+          >
+            <Text style={tw`text-white text-xs font-semibold`}>Organic</Text>
+          </View>
+        )}
 
-    {/* Product Overview */}
-    <View style={tw`mt-6`}>
-      <Text style={tw`text-lg font-semibold mb-2 text-gray-800`}>Product Overview</Text>
-      <Text style={tw`text-sm text-gray-700 leading-relaxed`}>
-        {item?.descriptor?.description || 'No description available.'}
+        <Image
+          source={{
+            uri: item?.descriptor?.image || 'https://via.placeholder.com/150',
+          }}
+          style={[tw`w-40 h-56 rounded-2xl`, { resizeMode: 'contain' }]}
+        />
+      </View>
+      {/* Provider & Product Name */}
+      <Text style={tw`text-xs text-green-600 mb-1`}>
+        Fulfilled by: {provider?.descriptor?.name || 'Unknown Provider'}
       </Text>
-    </View>
+      <Text style={tw`text-2xl font-bold text-gray-800`}>
+        {item?.descriptor?.name || 'Unnamed Product'}
+      </Text>
+      {/* Price & Stock */}
 
-    {/* Tags */}
-    {item?.tags?.length > 0 && (
-      <View style={tw`mt-4`}>
-        <Text style={tw`text-base font-semibold text-gray-800 mb-1`}>Tags:</Text>
-        <View style={tw`flex-row flex-wrap`}>
-          {item.tags.map((tag, idx) => (
-            <View
-              key={idx}
-              style={tw`mr-2 mb-2 px-3 py-1 bg-green-100 rounded-full`}
-              accessible
-              accessibilityLabel={`Tag: ${tag.value}`}
-            >
-              <Text style={tw`text-sm text-green-800`}>{tag.value}</Text>
-            </View>
-          ))}
-        </View>
+      <View style={tw`mt-3 p-3 bg-green-100 rounded-lg shadow-sm`}>
+        <Text style={tw`text-green-700 text-xl font-extrabold`}>
+          ₹{item?.batches?.[0]?.price?.value ?? 'N/A'}
+          {` ${item?.batches?.[0]?.price?.currency || 'INR'} / ${
+            item?.quantity?.unitized?.measure?.unit || 'unit'
+          }`}
+        </Text>
+        <Text style={tw`text-sm text-gray-600 mt-1`}>
+          Available: {item?.quantity?.available?.count ?? 0}{' '}
+          {item?.quantity?.unitized?.measure?.unit || ''}
+        </Text>
       </View>
-    )}
-
- {/* Available Batches */}
-{item?.batches?.length > 0 && (
-  <View style={tw`mt-6`}>
-    <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
-      Available Batches
-    </Text>
-
-    {item.batches.map((batch, index) => {
-      const isSelected = selectedBatchIndex === index;
-
-      const batchQuantity = batch?.quantity?.available?.count ?? 0;
-      const batchUnit = batch?.quantity?.unitized?.measure?.unit || '';
-
-      return (
+      {/* Quantity Selector */}
+      <View style={tw`flex-row items-center mt-5`}>
+        <Text style={tw`text-base font-semibold mr-4`}>Quantity</Text>
         <TouchableOpacity
-          key={index}
-          onPress={() => handleBatchSelect(index)}
-          style={tw.style(
-            'p-4 rounded-2xl mb-4 shadow-sm border',
-            isSelected
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 bg-white'
-          )}
+          onPress={() => setQuantity(Math.max(1, quantity - 1))}
+          style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
+          activeOpacity={0.7}
+          accessibilityRole='button'
+          accessibilityLabel='Decrease quantity'
         >
-          {/* Price */}
-          <Text style={tw`text-lg font-bold text-green-700 mb-1`}>
-            ₹{batch.price?.value ?? 'N/A'}
-          </Text>
-
-          {/* Quantity */}
-          <Text style={tw`text-sm text-gray-600`}>
-            Quantity: {batchQuantity} {batchUnit}
-          </Text>
-
-          {/* Expiry */}
-          <Text style={tw`text-sm text-gray-500`}>
-            Expiry: {batch.expiry_date
-              ? new Date(batch.expiry_date).toLocaleDateString()
-              : 'N/A'}
-          </Text>
-
-          {/* Selected Indicator */}
-          {isSelected && (
-            <Text style={tw`text-blue-600 font-medium mt-2`}>
-              ✔ Selected
-            </Text>
-          )}
+          <Text style={tw`text-xl font-bold text-green-800`}>−</Text>
         </TouchableOpacity>
-      );
-    })}
-  </View>
-)}
-
-
-
-    {/* Pickup Location */}
-    {fulfillment && (
-      <View style={tw`mt-5`}>
-        <Text style={tw`text-base font-semibold text-gray-800`}>Pickup Location</Text>
-        <Text style={tw`text-sm text-gray-700`}>{fulfillment?.location?.address}</Text>
-        <Text style={tw`text-xs text-gray-500`}>GPS: {fulfillment?.location?.gps}</Text>
+        <Text style={tw`mx-4 text-lg font-semibold text-gray-800`}>
+          {quantity}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setQuantity(quantity + 1)}
+          style={tw`w-10 h-10 rounded-full bg-green-200 justify-center items-center shadow-sm`}
+          activeOpacity={0.7}
+          accessibilityRole='button'
+          accessibilityLabel='Increase quantity'
+        >
+          <Text style={tw`text-xl font-bold text-green-800`}>+</Text>
+        </TouchableOpacity>
       </View>
-    )}
+      {/* Product Overview */}
+      <View style={tw`mt-6`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-800`}>
+          Product Overview
+        </Text>
+        <Text style={tw`text-sm text-gray-700 leading-relaxed`}>
+          {item?.descriptor?.description || 'No description available.'}
+        </Text>
+      </View>
+      {/* Tags */}
+      {item?.tags?.length > 0 && (
+        <View style={tw`mt-4`}>
+          <Text style={tw`text-base font-semibold text-gray-800 mb-1`}>
+            Tags:
+          </Text>
+          <View style={tw`flex-row flex-wrap`}>
+            {item.tags.map((tag, idx) => (
+              <View
+                key={idx}
+                style={tw`mr-2 mb-2 px-3 py-1 bg-green-100 rounded-full`}
+                accessible
+                accessibilityLabel={`Tag: ${tag.value}`}
+              >
+                <Text style={tw`text-sm text-green-800`}>{tag.value}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+      {/* Available Batches */}
+      {item?.batches?.length > 0 && (
+        <View style={tw`mt-6`}>
+          <Text style={tw`text-lg font-semibold text-gray-900 mb-4`}>
+            Available Batches
+          </Text>
+          {console.log('Batches: ', JSON.stringify(item.batches))}
+          {item.batches.map((batch, index) => {
+            // const isSelected = selectedBatchIndex === index;
+            // const isSelected = selectedBatch.includes(batch.id);
+            const isSelected = selectedBatch.some((b) => b.id === batch.id);
 
-    {/* Add to Cart Button */}
-    <TouchableOpacity
-      style={tw`bg-green-600 py-4 rounded-2xl mt-8 items-center shadow-md`}
-      onPress={() =>
-        handleAddToCart({
-          user_id: "a985baac-9028-4dc1-bbd9-a6f3aae49ef5", // Replace dynamically
-          bpp_id: productData?.bpp_id || "agri.bpp",
-          bpp_product_id: item?.id,
-          provider_id: provider?.id,
-          provider_name: provider?.descriptor?.name,
-          provider_address: fulfillment?.location?.address || "",
-          fulfillment_id: fulfillment?.id || "",
-          item_name: item?.descriptor?.name,
-          quantity: quantity,
-          unit_price: selectedPrice || 0,
-          image_url: item?.descriptor?.image || "",
-          category: item?.category_id,
-        })
-      }
-      activeOpacity={0.85}
-      accessibilityRole="button"
-      accessibilityLabel="Add to cart"
-    >
-      <Text style={tw`text-white text-base font-bold`}>🛒 Add to Cart</Text>
-    </TouchableOpacity>
+            const batchQuantity = batch?.quantity?.available?.count ?? 0;
+            const batchUnit = batch?.quantity?.unitized?.measure?.unit || '';
 
-    {/* Similar Products */}
-    <SimilarProducts relatedItems={relatedItems} navigation={navigation} />
-  </ScrollView>
-);
+            return (
+              <TouchableOpacity
+                key={batch.id}
+                onPress={() =>
+                  handleBatchSelect({ id: batch.id, price: batch.price.value })
+                }
+                style={tw.style(
+                  'p-4 rounded-2xl mb-4 shadow-sm border',
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 bg-white'
+                )}
+              >
+                {/* Price */}
+                <Text style={tw`text-lg font-bold text-green-700 mb-1`}>
+                  ₹{batch.price?.value ?? 'N/A'}
+                </Text>
 
+                {/* Quantity */}
+                <Text style={tw`text-sm text-gray-600`}>
+                  Quantity: {batchQuantity} {batchUnit}
+                </Text>
 
+                {/* Expiry */}
+                <Text style={tw`text-sm text-gray-500`}>
+                  Expiry:{' '}
+                  {batch.expiry_date
+                    ? new Date(batch.expiry_date).toLocaleDateString()
+                    : 'N/A'}
+                </Text>
+
+                {/* Selected Indicator */}
+                {isSelected && (
+                  <Text style={tw`text-blue-600 font-medium mt-2`}>
+                    ✔ Selected
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+      {/* Pickup Location */}
+      {fulfillment && (
+        <View style={tw`mt-5`}>
+          <Text style={tw`text-base font-semibold text-gray-800`}>
+            Pickup Location
+          </Text>
+          <Text style={tw`text-sm text-gray-700`}>
+            {fulfillment?.location?.address}
+          </Text>
+          <Text style={tw`text-xs text-gray-500`}>
+            GPS: {fulfillment?.location?.gps}
+          </Text>
+        </View>
+      )}
+      {/* Add to Cart Button */}
+      <TouchableOpacity
+        style={tw`bg-green-600 py-4 rounded-2xl mt-8 items-center shadow-md`}
+        //Ajith's
+        // onPress={() =>
+        //   handleAddToCart({
+        //     user_id: 'a985baac-9028-4dc1-bbd9-a6f3aae49ef5', // Replace dynamically
+        //     bpp_id: productData?.bpp_id || 'agri.bpp',
+        //     bpp_product_id: item?.id,
+        //     provider_id: provider?.id,
+        //     provider_name: provider?.descriptor?.name,
+        //     provider_address: fulfillment?.location?.address || '',
+        //     fulfillment_id: fulfillment?.id || '',
+        //     item_name: item?.descriptor?.name,
+        //     quantity: quantity,
+        //     unit_price: selectedPrice || 0,
+        //     image_url: item?.descriptor?.image || '',
+        //     category: item?.category_id,
+        //   })
+        // }
+        // Shriram's
+        onPress={() => {
+          const cartItems = selectedBatch.map((batch) => ({
+            user_id: 'a985baac-9028-4dc1-bbd9-a6f3aae49ef5', // Replace dynamically
+            bpp_id: productData?.bpp_id || 'agri.bpp',
+            bpp_product_id: item?.id,
+            provider_id: provider?.id,
+            provider_name: provider?.descriptor?.name,
+            provider_address: fulfillment?.location?.address || '',
+            fulfillment_id: fulfillment?.id || '',
+            item_name: item?.descriptor?.name,
+            quantity: quantity,
+            unit_price: parseFloat(batch.price) || 0,
+            image_url: item?.descriptor?.image || '',
+            category: item?.category_id,
+            batch_id: batch.id,
+          }));
+
+          handleAddToCart(cartItems); // Pass array instead of single object
+        }}
+        activeOpacity={0.85}
+        accessibilityRole='button'
+        accessibilityLabel='Add to cart'
+      >
+        <Text style={tw`text-white text-base font-bold`}>🛒 Add to Cart</Text>
+      </TouchableOpacity>
+      {/* Similar Products */}
+      <SimilarProducts relatedItems={relatedItems} navigation={navigation} />
+    </ScrollView>
+  );
 }
