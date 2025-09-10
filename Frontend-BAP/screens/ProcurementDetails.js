@@ -23,18 +23,18 @@ const ProcurementDetails = () => {
   console.log(item);
   return (
     <SafeAreaView className='flex-1'>
+      <View
+        style={tw`flex-row justify-start items-center p-1`}
+        className='bg-[#B2FFB7]'
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image source={backArrow} style={tw`w-6 h-6 p-1`} />
+        </TouchableOpacity>
+        <Text style={tw`text-xl font-semibold p-2`}>
+          {item.farmerDetails.farmerName}
+        </Text>
+      </View>
       <ScrollView>
-        <View
-          style={tw`flex-row justify-start items-center p-1`}
-          className='bg-[#B2FFB7]'
-        >
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Image source={backArrow} style={tw`w-6 h-6 p-1`} />
-          </TouchableOpacity>
-          <Text style={tw`text-xl font-semibold p-2`}>
-            {item.farmerDetails.farmerName}
-          </Text>
-        </View>
         {/* <Header title={item.farmerName} page="Home"/> */}
         <View style={tw`bg-white p-4 rounded-lg border-gray-300 border-2 m-2`}>
           <View
@@ -225,22 +225,21 @@ const ProcurementDetails = () => {
             />
           </View>
         </View>
-
-        <View className='my-1'>
-          <TouchableOpacity
-            // style={[tw`p-2 rounded-lg my-1`, { backgroundColor: '#2B9846' }]}
-            style={tw`p-2 rounded-lg mx-2`}
-            className='bg-[#2B9846]'
-            // onPress={()=>navigation.navigate('')}
-          >
-            <Text
-              style={tw`text-white text-sm font-semibold justify-center items-center flex`}
-            >
-              Complete the form
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+      <View className='my-1'>
+        <TouchableOpacity
+          // style={[tw`p-2 rounded-lg my-1`, { backgroundColor: '#2B9846' }]}
+          style={tw`p-2 rounded-lg mx-2`}
+          className='bg-[#2B9846]'
+          // onPress={()=>navigation.navigate('')}
+        >
+          <Text
+            style={tw`text-white text-sm font-semibold justify-center items-center flex`}
+          >
+            Complete the form
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };

@@ -27,22 +27,23 @@ import CreateProcurementScreen from './CreateProcurementScreen';
 const Circle = ({ selected }) => (
   <View
     style={{
-      borderRadius: 12,
+      // borderRadius: 12,
       borderWidth: 2,
       borderColor: '#2B9846',
       alignItems: 'center',
       justifyContent: 'center',
     }}
-    className='w-6 h-6 rounded-full '
+    className='w-6 h-6 rounded-full'
   >
     {selected && (
       <View
         style={{
-          width: 12,
-          height: 12,
-          borderRadius: 6,
+          // width: 12,
+          // height: 12,
+          // borderRadius: 6,
           backgroundColor: '#2B9846',
         }}
+        className='w-4 h-4 rounded-full'
       />
     )}
   </View>
@@ -50,16 +51,11 @@ const Circle = ({ selected }) => (
 
 const ProcurementsScreen = () => {
   const [isFarmerModal, setFarmerModal] = useState(false);
-
-  const farmerInputRef = useRef < TextInput > null;
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedDays, setSelectedDays] = useState('Last 60 days');
+
   const [selectedCrops, setSelectedCrops] = useState(['Wheat']);
   const [selectedFarmers, setSelectedFarmers] = useState(['Rahul Kumar']);
-
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
-  };
 
   const openFarmerModal = () => setFarmerModal(true);
   const closeFarmerModal = () => {
@@ -68,17 +64,45 @@ const ProcurementsScreen = () => {
   const clearFilter = () => {
     setSelectedDays('');
     setSelectedCrops([]);
+  };
+
+  const clearFarmerFilter = () => {
     setSelectedFarmers([]);
   };
   const [selectedTab, setSelectedTab] = useState('progressing');
 
-  const { procurementList, farmers } = data;
+  const [tempSelectedFarmers, setTempSelectedFarmers] =
+    useState(selectedFarmers);
+  const [tempSelectedDays, setTempSelectedDays] = useState(selectedDays);
+  const [tempSelectedCrops, setTempSelectedCrops] = useState(selectedCrops);
 
+  const { procurementList, farmers } = data;
+  const openFilterModal = () => {
+    setTempSelectedCrops(selectedCrops);
+    setTempSelectedDays(selectedDays);
+    setModalVisible(true);
+  };
+  const closeFilterModal = () => {
+    setModalVisible(false);
+  };
   const filteredList = procurementList.filter(
     (item) => item.isCompleted === (selectedTab === 'completed' ? true : false)
   );
 
   const navigation = useNavigation();
+
+  const applyFilters = () => {
+    setSelectedCrops(tempSelectedCrops);
+    s;
+    setSelectedDays(tempSelectedDays);
+    // toggleModal(); // Close modal after applying filters
+    closeFilterModal();
+  };
+
+  const applyFarmerFilter = () => {
+    setSelectedFarmers(tempSelectedFarmers);
+    closeFarmerModal();
+  };
 
   return (
     <SafeAreaView className='flex-1 bg-white'>
@@ -138,7 +162,7 @@ const ProcurementsScreen = () => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity className='' onPress={toggleModal}>
+        <TouchableOpacity className='' onPress={openFilterModal}>
           <View className='flex flex-row'>
             <Image source={filterIcon} style={tw`w-6 h-6`} />
             <Text className='text-gray-600 text-sm'>Filters</Text>
@@ -180,7 +204,6 @@ const ProcurementsScreen = () => {
         onBackdropPress={closeFarmerModal}
         style={{ margin: 0, justifyContent: 'flex-end' }}
         animationType='slide' // className='flex'
-        className
       >
         <View className=' bg-white rounded-t-3xl p-6 max-h-96'>
           <View className='flex-1'>
@@ -194,7 +217,7 @@ const ProcurementsScreen = () => {
                     <TouchableOpacity
                       className='flex-row justify-between bg-[#2B9846]/[0.08] p-2  rounded-lg my-1'
                       onPress={() => {
-                        setSelectedFarmers((prev) =>
+                        setTempSelectedFarmers((prev) =>
                           prev.includes(item.name)
                             ? prev.filter((f) => f !== item.name)
                             : [...prev, item.name]
@@ -216,7 +239,7 @@ const ProcurementsScreen = () => {
 
                       <View className=' rounded-full border-1'>
                         <Circle
-                          selected={selectedFarmers.includes(item.name)}
+                          selected={tempSelectedFarmers.includes(item.name)}
                         />
                       </View>
                     </TouchableOpacity>
@@ -232,7 +255,10 @@ const ProcurementsScreen = () => {
               >
                 <Text className='text-[#2B9846] font-medium'>Clear Filter</Text>
               </TouchableOpacity>
-              <TouchableOpacity className='flex-1 justify-center items-center bg-[#2B9846] rounded-lg'>
+              <TouchableOpacity
+                className='flex-1 justify-center items-center bg-[#2B9846] rounded-lg'
+                onPress={applyFarmerFilter}
+              >
                 <Text className=' text-white'>Apply</Text>
               </TouchableOpacity>
             </View>
@@ -242,7 +268,7 @@ const ProcurementsScreen = () => {
 
       <Modal
         isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
+        onBackdropPress={closeFilterModal}
         // propagateSwipe={true}
         animationType='slide'
         style={{ margin: 0, justifyContent: 'flex-end' }}
@@ -265,15 +291,15 @@ const ProcurementsScreen = () => {
                     <TouchableOpacity
                       key={item}
                       className={`px-4 py-2 rounded-full mr-2 ${
-                        selectedDays === item
+                        tempSelectedDays === item
                           ? 'border-2 border-[#2B9846]  bg-[#2B984613]'
                           : 'bg-gray-200'
                       }`}
-                      onPress={() => setSelectedDays(item)}
+                      onPress={() => setTempSelectedDays(item)}
                     >
                       <Text
                         className={`${
-                          selectedDays === item
+                          tempSelectedDays === item
                             ? 'text-[#2B9846]'
                             : 'text-gray-700'
                         }`}
@@ -297,12 +323,12 @@ const ProcurementsScreen = () => {
                     <TouchableOpacity
                       key={crop}
                       className={`px-4 py-2 rounded-full mr-2 mb-2 ${
-                        selectedCrops.includes(crop)
+                        tempSelectedCrops.includes(crop)
                           ? 'border-2 border-[#2B9846] bg-[#2B984613]'
                           : 'bg-gray-200'
                       }`}
                       onPress={() => {
-                        setSelectedCrops((prev) =>
+                        setTempSelectedCrops((prev) =>
                           prev.includes(crop)
                             ? prev.filter((c) => c !== crop)
                             : [...prev, crop]
@@ -311,7 +337,7 @@ const ProcurementsScreen = () => {
                     >
                       <Text
                         className={`${
-                          selectedCrops.includes(crop)
+                          tempSelectedCrops.includes(crop)
                             ? 'text-[#2B9846]'
                             : 'text-gray-700'
                         }`}
@@ -323,7 +349,7 @@ const ProcurementsScreen = () => {
                 </View>
               </View>
 
-              <View className='mb-4'>
+              {/* <View className='mb-4'>
                 <Text className='text-sm font-medium mb-2'>Farmer Name</Text>
                 <TextInput
                   className='border border-gray-300 rounded-md px-3 py-2 mb-2'
@@ -360,7 +386,7 @@ const ProcurementsScreen = () => {
                     )
                   )}
                 </View>
-              </View>
+              </View> */}
 
               <View className='flex-row space-x-3 mt-4'>
                 <TouchableOpacity
@@ -373,7 +399,7 @@ const ProcurementsScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   className='flex-1 bg-green-600 py-3 rounded-md items-center'
-                  onPress={toggleModal}
+                  onPress={applyFilters}
                 >
                   <Text className='text-white font-medium'>Apply</Text>
                 </TouchableOpacity>
