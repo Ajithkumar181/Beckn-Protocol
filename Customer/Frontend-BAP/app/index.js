@@ -14,6 +14,18 @@ const index = () => {
       <TouchableOpacity onPress={() => router.push('/SignUp')} className='my-4'>
         <Text className='text-lg font-semibold'>Signup</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push('/ShoppingCart')} className='my-4'>
+        <Text>ShoppingCart</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push('/Checkout')} className='my-4'>
+        <Text>Checkout</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push('/Success')} className='my-4'>
+        <Text>Success</Text>
+      </TouchableOpacity>
+
     </View>
   );
 };
