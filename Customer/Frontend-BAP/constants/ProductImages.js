@@ -10,6 +10,7 @@ import apple from '../assets/images/apple.jpg';
 import pumpkin from '../assets/images/pumpkin.jpeg';
 import mustardseeds from '../assets/images/mustardseeds.jpeg';
 import papaya from '../assets/images/papaya.jpg';
+import tomato from '../assets/images/tomato.jpeg';
 const ProductImages = {
   bananabread,
   cheddar,
@@ -23,5 +24,7 @@ const ProductImages = {
   mustardseeds,
   papaya,
   pumpkin,
+
+  tomato
 };
 export default ProductImages;
