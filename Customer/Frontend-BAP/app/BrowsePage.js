@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 // import { StatusBar } from 'expo-status-bar';
+import tw from 'tailwind-react-native-classnames';
 
 import {
   categoriesWithProducts,
@@ -142,7 +143,7 @@ export default function Home() {
   );
 
   return (
-    <SafeAreaView className='flex-1 bg-gray-50'>
+    <SafeAreaView className='flex-1 bg-gray-50' style={tw`flex-1`}>
       {/* <ScrollView> */}
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
